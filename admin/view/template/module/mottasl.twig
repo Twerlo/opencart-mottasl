@@ -3,48 +3,216 @@
 	<div class="page-header">
 		<div class="container-fluid">
 			<div class="float-end">
-				<button type="submit" form="form-module" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-save"></i></button>
-				<a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a></div>
+				<button type="submit" form="form-module" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary">
+					<i class="fa-solid fa-save"></i>
+				</button>
+				<a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light">
+					<i class="fa-solid fa-reply"></i>
+				</a>
+			</div>
 			<h1>{{ heading_title }}</h1>
 			<ol class="breadcrumb">
 				{% for breadcrumb in breadcrumbs %}
-					<li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+					<li class="breadcrumb-item">
+						<a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+					</li>
 				{% endfor %}
 			</ol>
 		</div>
 	</div>
 	<div class="container-fluid">
 		<div class="card">
-			<div class="card-header"><i class="fa-solid fa-pencil"></i> {{ text_edit }}</div>
+			<div class="card-header">
+				<i class="fa-solid fa-pencil"></i>
+				{{ text_edit }}</div>
 			<div class="card-body">
-				<form id="form-module" action="{{ save }}" method="post" data-oc-toggle="ajax">
-					<div class="row mb-3">
-						<div class="col-sm-2"></div>
+				<form
+					id="form-module" action="{{ save }}" method="post" data-oc-toggle="ajax">
+					{# mottasl account #}
+					<div
+						class="row mb-3">
+						{# header #}
+						<div class="col-12 h4 fw-bold mb-1">{{ mottasl_account_header }}</div>
+						{# subheader #}
+						<div class="col-12 text-secondary mb-3">{{ mottasl_account_subheader }}</div>
+
+						{# api key #}
+						<label for="input-api_key" class="col-sm-2 col-form-label">{{ entry_api_key }}</label>
 						<div class="col-sm-10">
-							<div>*{{ templates_note }}</div>
+							<input type="text" name="api_key" value="{{ api_key }}" placeholder="{{ entry_api_key }}" id="input-api_key" class="form-control"/>
+							<div id="error-api_key" class="invalid-feedback"></div>
 						</div>
 					</div>
+					{# customer created notification #}
+					<div
+						class="row mb-3">
+						{# header #}
+						<div class="col-10 h4 fw-bold mb-1">{{ customer_created_header }}</div>
+						{# status #}
+						<div class="col-2">
+							<div class="form-check form-switch fs-3 float-end">
+								<input type="hidden" name="customer_created_status" value="0"/>
+								<input type="checkbox" name="customer_created_status" value="1" id="input-customer_created_status" class="form-check-input" {% if customer_created_status %} checked {% endif %}/>
+							</div>
+						</div>
+						{# subheader #}
+						<div class="col-12 text-secondary mb-3">{{ customer_created_subheader }}</div>
+
+						{# template id #}
+						<label for="input-customer_created_temp_id" class="col-sm-2 col-form-label">{{ entry_template_id }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="customer_created_temp_id" value="{{ customer_created_temp_id }}" placeholder="{{ entry_template_id }}" id="input-customer_created_temp_id" class="form-control"/>
+							<div id="error-customer_created_temp_id" class="invalid-feedback"></div>
+						</div>
+						{# template lang #}
+						<label for="input-customer_created_temp_lang" class="col-sm-2 col-form-label">{{ entry_template_lang }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="customer_created_temp_lang" value="{{ customer_created_temp_lang }}" placeholder="{{ entry_template_lang }}" id="input-customer_created_temp_lang" class="form-control"/>
+							<div id="error-customer_created_temp_lang" class="invalid-feedback"></div>
+						</div>
+						{# note #}
+						<div class="col-12 form-text text-end">*{{ customer_created_note }}</div>
+					</div>
+
+					{# order created notification #}
+					<div
+						class="row mb-3">
+						{# header #}
+						<div class="col-10 h4 fw-bold mb-1">{{ order_created_header }}</div>
+						{# status #}
+						<div class="col-2">
+							<div class="form-check form-switch fs-3 float-end">
+								<input type="hidden" name="order_created_status" value="0"/>
+								<input type="checkbox" name="order_created_status" value="1" id="input-order_created_status" class="form-check-input" {% if order_created_status %} checked {% endif %}/>
+							</div>
+						</div>
+						{# subheader #}
+						<div class="col-12 text-secondary mb-3">{{ order_created_subheader }}</div>
+
+						{# template id #}
+						<label for="input-order_created_temp_id" class="col-sm-2 col-form-label">{{ entry_template_id }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="order_created_temp_id" value="{{ order_created_temp_id }}" placeholder="{{ entry_template_id }}" id="input-order_created_temp_id" class="form-control"/>
+							<div id="error-order_created_temp_id" class="invalid-feedback"></div>
+						</div>
+						{# template lang #}
+						<label for="input-order_created_temp_lang" class="col-sm-2 col-form-label">{{ entry_template_lang }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="order_created_temp_lang" value="{{ order_created_temp_lang }}" placeholder="{{ entry_template_lang }}" id="input-order_created_temp_lang" class="form-control"/>
+							<div id="error-order_created_temp_lang" class="invalid-feedback"></div>
+						</div>
+						{# note #}
+						<div class="col-12 form-text text-end">*{{ order_created_note }}</div>
+					</div>
+
+					{# order updated notification #}
+					<div
+						class="row mb-3">
+						{# header #}
+						<div class="col-10 h4 fw-bold mb-1">{{ order_updated_header }}</div>
+						{# status #}
+						<div class="col-2">
+							<div class="form-check form-switch fs-3 float-end">
+								<input type="hidden" name="order_updated_status" value="0"/>
+								<input type="checkbox" name="order_updated_status" value="1" id="input-order_updated_status" class="form-check-input" {% if order_updated_status %} checked {% endif %}/>
+							</div>
+						</div>
+						{# subheader #}
+						<div class="col-12 text-secondary mb-3">{{ order_updated_subheader }}</div>
+
+						{# template id #}
+						<label for="input-order_updated_temp_id" class="col-sm-2 col-form-label">{{ entry_template_id }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="order_updated_temp_id" value="{{ order_updated_temp_id }}" placeholder="{{ entry_template_id }}" id="input-order_updated_temp_id" class="form-control"/>
+							<div id="error-order_updated_temp_id" class="invalid-feedback"></div>
+						</div>
+						{# template lang #}
+						<label for="input-order_updated_temp_lang" class="col-sm-2 col-form-label">{{ entry_template_lang }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="order_updated_temp_lang" value="{{ order_updated_temp_lang }}" placeholder="{{ entry_template_lang }}" id="input-order_updated_temp_lang" class="form-control"/>
+							<div id="error-order_updated_temp_lang" class="invalid-feedback"></div>
+						</div>
+						{# note #}
+						<div class="col-12 form-text text-end">*{{ order_updated_note }}</div>
+					</div>
+
+					{# abandoned cart 1st shot notification #}
+					<div
+						class="row mb-3">
+						{# header #}
+						<div class="col-10 h4 fw-bold mb-1">{{ abandon_first_header }}</div>
+						{# status #}
+						<div class="col-2">
+							<div class="form-check form-switch fs-3 float-end">
+								<input type="hidden" name="abandon_first_status" value="0"/>
+								<input type="checkbox" name="abandon_first_status" value="1" id="input-abandon_first_status" class="form-check-input" {% if abandon_first_status %} checked {% endif %}/>
+							</div>
+						</div>
+						{# subheader #}
+						<div class="col-12 text-secondary mb-3">{{ abandon_first_subheader }}</div>
+
+						{# template id #}
+						<label for="input-abandon_first_temp_id" class="col-sm-2 col-form-label">{{ entry_template_id }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="abandon_first_temp_id" value="{{ abandon_first_temp_id }}" placeholder="{{ entry_template_id }}" id="input-abandon_first_temp_id" class="form-control"/>
+							<div id="error-abandon_first_temp_id" class="invalid-feedback"></div>
+						</div>
+						{# template lang #}
+						<label for="input-abandon_first_temp_lang" class="col-sm-2 col-form-label">{{ entry_template_lang }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="abandon_first_temp_lang" value="{{ abandon_first_temp_lang }}" placeholder="{{ entry_template_lang }}" id="input-abandon_first_temp_lang" class="form-control"/>
+							<div id="error-abandon_first_temp_lang" class="invalid-feedback"></div>
+						</div>
+						{# note #}
+						<div class="col-12 form-text text-end">*{{ abandon_first_note }}</div>
+					</div>
+
+					{# cabandoned cart 2nd shot notification #}
+					<div
+						class="row mb-3">
+						{# header #}
+						<div class="col-10 h4 fw-bold mb-1">{{ abandon_second_header }}</div>
+						{# status #}
+						<div class="col-2">
+							<div class="form-check form-switch fs-3 float-end">
+								<input type="hidden" name="abandon_second_status" value="0"/>
+								<input type="checkbox" name="abandon_second_status" value="1" id="input-abandon_second_status" class="form-check-input" {% if abandon_second_status %} checked {% endif %}/>
+							</div>
+						</div>
+						{# subheader #}
+						<div class="col-12 text-secondary mb-3">{{ abandon_second_subheader }}</div>
+
+						{# template id #}
+						<label for="input-abandon_second_temp_id" class="col-sm-2 col-form-label">{{ entry_template_id }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="abandon_second_temp_id" value="{{ abandon_second_temp_id }}" placeholder="{{ entry_template_id }}" id="input-abandon_second_temp_id" class="form-control"/>
+							<div id="error-abandon_second_temp_id" class="invalid-feedback"></div>
+						</div>
+						{# template lang #}
+						<label for="input-abandon_second_temp_lang" class="col-sm-2 col-form-label">{{ entry_template_lang }}</label>
+						<div class="col-sm-4 mb-3">
+							<input type="text" name="abandon_second_temp_lang" value="{{ abandon_second_temp_lang }}" placeholder="{{ entry_template_lang }}" id="input-abandon_second_temp_lang" class="form-control"/>
+							<div id="error-abandon_second_temp_lang" class="invalid-feedback"></div>
+						</div>
+						{# note #}
+						<div class="col-12 form-text text-end">*{{ abandon_second_note }}</div>
+					</div>
+					{# temp id #}
 					<div class="row mb-3">
-            <label for="input-api_key" class="col-sm-2 col-form-label">{{ entry_api_key }}</label>
-            <div class="col-sm-10">
-              <input type="text" name="module_mottasl_api_key" value="{{ api_key }}" placeholder="{{ entry_api_key }}" id="input-api_key" class="form-control"/>
-              <div id="error-api_key" class="invalid-feedback"></div>
-            </div>
-          </div>
+						<label for="input-template_id" class="col-sm-2 col-form-label">{{ entry_template_id }}</label>
+						<div class="col-sm-10">
+							<input type="text" name="template_id" value="{{ template_id }}" placeholder="{{ entry_template_id }}" id="input-template_id" class="form-control"/>
+							<div id="error-template_id" class="invalid-feedback"></div>
+						</div>
+					</div>
+					{# temp lang #}
 					<div class="row mb-3">
-            <label for="input-template_id" class="col-sm-2 col-form-label">{{ entry_template_id }}</label>
-            <div class="col-sm-10">
-              <input type="text" name="module_mottasl_template_id" value="{{ template_id }}" placeholder="{{ entry_template_id }}" id="input-template_id" class="form-control"/>
-              <div id="error-template_id" class="invalid-feedback"></div>
-            </div>
-          </div>
-					<div class="row mb-3">
-            <label for="input-template_lang" class="col-sm-2 col-form-label">{{ entry_template_lang }}</label>
-            <div class="col-sm-10">
-              <input type="text" name="module_mottasl_template_lang" value="{{ template_lang }}" placeholder="{{ entry_template_lang }}" id="input-template_lang" class="form-control"/>
-              <div id="error-template_lang" class="invalid-feedback"></div>
-            </div>
-          </div>
+						<label for="input-template_lang" class="col-sm-2 col-form-label">{{ entry_template_lang }}</label>
+						<div class="col-sm-10">
+							<input type="text" name="template_lang" value="{{ template_lang }}" placeholder="{{ entry_template_lang }}" id="input-template_lang" class="form-control"/>
+							<div id="error-template_lang" class="invalid-feedback"></div>
+						</div>
+					</div>
 				</form>
 			</div>
 		</div>

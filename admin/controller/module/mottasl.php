@@ -39,15 +39,30 @@ class Mottasl extends \Opencart\System\Engine\Controller
     $this->load->model('setting/setting');
     $settings = $this->model_setting_setting->getSetting('module_mottasl');
 
-    if (isset($settings['module_mottasl_api_key'])) {
-      $data['api_key'] = $settings['module_mottasl_api_key'];
-    }
-    if (isset($settings['module_mottasl_template_id'])) {
-      $data['template_id'] = $settings['module_mottasl_template_id'];
-    }
-    if (isset($settings['module_mottasl_template_lang'])) {
-      $data['template_lang'] = $settings['module_mottasl_template_lang'];
-    }
+    $data['api_key'] = isset($settings['module_mottasl_api_key']) ? $settings['module_mottasl_api_key'] : '';
+
+    $data['customer_created_status'] = isset($settings['module_mottasl_customer_created_status']) ? $settings['module_mottasl_customer_created_status'] : '';
+    $data['customer_created_temp_id'] = isset($settings['module_mottasl_customer_created_temp_id']) ? $settings['module_mottasl_customer_created_temp_id'] : '';
+    $data['customer_created_temp_lang'] = isset($settings['module_mottasl_customer_created_temp_lang']) ? $settings['module_mottasl_customer_created_temp_lang'] : '';
+
+    $data['order_created_status'] = isset($settings['module_mottasl_order_created_status']) ? $settings['module_mottasl_order_created_status'] : '';
+    $data['order_created_temp_id'] = isset($settings['module_mottasl_order_created_temp_id']) ? $settings['module_mottasl_order_created_temp_id'] : '';
+    $data['order_created_temp_lang'] = isset($settings['module_mottasl_order_created_temp_lang']) ? $settings['module_mottasl_order_created_temp_lang'] : '';
+
+    $data['order_updated_status'] = isset($settings['module_mottasl_order_updated_status']) ? $settings['module_mottasl_order_updated_status'] : '';
+    $data['order_updated_temp_id'] = isset($settings['module_mottasl_order_updated_temp_id']) ? $settings['module_mottasl_order_updated_temp_id'] : '';
+    $data['order_updated_temp_lang'] = isset($settings['module_mottasl_order_updated_temp_lang']) ? $settings['module_mottasl_order_updated_temp_lang'] : '';
+
+    $data['abandon_first_status'] = isset($settings['module_mottasl_abandon_first_status']) ? $settings['module_mottasl_abandon_first_status'] : '';
+    $data['abandon_first_temp_id'] = isset($settings['module_mottasl_abandon_first_temp_id']) ? $settings['module_mottasl_abandon_first_temp_id'] : '';
+    $data['abandon_first_temp_lang'] = isset($settings['module_mottasl_abandon_first_temp_lang']) ? $settings['module_mottasl_abandon_first_temp_lang'] : '';
+
+    $data['abandon_second_status'] = isset($settings['module_mottasl_abandon_second_status']) ? $settings['module_mottasl_abandon_second_status'] : '';
+    $data['abandon_second_temp_id'] = isset($settings['module_mottasl_abandon_second_temp_id']) ? $settings['module_mottasl_abandon_second_temp_id'] : '';
+    $data['abandon_second_temp_lang'] = isset($settings['module_mottasl_abandon_second_temp_lang']) ? $settings['module_mottasl_abandon_second_temp_lang'] : '';
+
+    $data['template_id'] = isset($settings['module_mottasl_template_id']) ? $settings['module_mottasl_template_id'] : '';
+    $data['template_lang'] = isset($settings['module_mottasl_template_lang']) ? $settings['module_mottasl_template_lang'] : '';
 
     $this->response->setOutput($this->load->view('extension/mottasl_oc/module/mottasl', $data));
   }
@@ -63,12 +78,36 @@ class Mottasl extends \Opencart\System\Engine\Controller
     }
 
     $new_settings = [
-      'module_mottasl_api_key' => $this->request->post['module_mottasl_api_key'],
-      'module_mottasl_template_id' => $this->request->post['module_mottasl_template_id'],
-      'module_mottasl_template_lang' => $this->request->post['module_mottasl_template_lang'],
-      'module_mottasl_status' => ((bool)$this->request->post['module_mottasl_api_key'] &&
-        (bool)$this->request->post['module_mottasl_template_id'] &&
-        (bool)$this->request->post['module_mottasl_template_lang']
+      'module_mottasl_api_key' => $this->request->post['api_key'],
+
+      'module_mottasl_customer_created_status' => $this->request->post['customer_created_status'],
+      'module_mottasl_customer_created_temp_id' => $this->request->post['customer_created_temp_id'],
+      'module_mottasl_customer_created_temp_lang' => $this->request->post['customer_created_temp_lang'],
+
+      'module_mottasl_order_created_status' => $this->request->post['order_created_status'],
+      'module_mottasl_order_created_temp_id' => $this->request->post['order_created_temp_id'],
+      'module_mottasl_order_created_temp_lang' => $this->request->post['order_created_temp_lang'],
+
+      'module_mottasl_order_updated_status' => $this->request->post['order_updated_status'],
+      'module_mottasl_order_updated_temp_id' => $this->request->post['order_updated_temp_id'],
+      'module_mottasl_order_updated_temp_lang' => $this->request->post['order_updated_temp_lang'],
+
+      'module_mottasl_abandon_first_status' => $this->request->post['abandon_first_status'],
+      'module_mottasl_abandon_first_temp_id' => $this->request->post['abandon_first_temp_id'],
+      'module_mottasl_abandon_first_temp_lang' => $this->request->post['abandon_first_temp_lang'],
+
+      'module_mottasl_abandon_second_status' => $this->request->post['abandon_second_status'],
+      'module_mottasl_abandon_second_temp_id' => $this->request->post['abandon_second_temp_id'],
+      'module_mottasl_abandon_second_temp_lang' => $this->request->post['abandon_second_temp_lang'],
+
+      'module_mottasl_template_id' => $this->request->post['template_id'],
+      'module_mottasl_template_lang' => $this->request->post['template_lang'],
+      'module_mottasl_status' => ((bool)$this->request->post['api_key'] &&
+        ((bool)$this->request->post['customer_created_status'] ||
+          (bool)$this->request->post['order_created_status'] ||
+          (bool)$this->request->post['order_updated_status'] ||
+          (bool)$this->request->post['abandon_first_status'] ||
+          (bool)$this->request->post['abandon_second_status'])
       )
     ];
 
