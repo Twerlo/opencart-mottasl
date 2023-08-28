@@ -17,7 +17,9 @@ class Mottasl extends \Opencart\System\Engine\Controller
   public function install()
   {
   }
-
+  public function uninstall(): void
+  {
+  }
   // catalog/model/checkout/order/addHistory/before
   public function handleOrderEvent(string &$route, array &$args): void
   {
@@ -122,12 +124,78 @@ class Mottasl extends \Opencart\System\Engine\Controller
     $this->__sendMessageWithZoko($mottasl_api_key, $customer_phone, $mottasl_template_id, $mottasl_template_lang, $args);
   }
 
+  public function abandonCart(): void
+  {
+    error_log("abandon cart cron");
+    $this->load->model('setting/setting');
+    $settings = $this->model_setting_setting->getSetting('module_mottasl');
+
+    $is_enabled = isset($settings['module_mottasl_api_key']) && ((bool)$settings['module_mottasl_abandon_first_status'] || (bool)$settings['module_mottasl_abandon_second_status']);
+
+    if (!$is_enabled) {
+      $json = [];
+      $json["error"] = "WA notification is disabled for abandoned cart";
+      $this->response->addHeader('Content-Type: application/json');
+      $this->response->setOutput(json_encode($json));
+      return;
+    }
+
+    $is_valid_first = !(bool)$settings['module_mottasl_abandon_first_status'] || isset($settings['module_mottasl_abandon_first_temp_id']) && isset($settings['module_mottasl_abandon_first_temp_lang']);
+    $is_valid_second = !(bool)$settings['module_mottasl_abandon_second_status'] || isset($settings['module_mottasl_abandon_second_temp_id']) && isset($settings['module_mottasl_abandon_second_temp_lang']);
+    $is_valid = $is_valid_first && $is_valid_second;
+
+    if (!$is_valid) {
       $json = [];
       $json["error"] = "Some Mottal settings are not set.";
       $this->response->addHeader('Content-Type: application/json');
       $this->response->setOutput(json_encode($json));
-    } else {
-      $this->__sendMessageWithZoko($customer_data['telephone'], $customer_data['firstname'], $order_data['invoice_prefix'] . $order_data['invoice_no'], $this->__getOrderStatus($order_status_id), $settings);
+      return;
+    }
+
+    $mottasl_api_key = $settings['module_mottasl_api_key'];
+    $mottasl_template_id_first = $settings['module_mottasl_abandon_first_temp_id'] ?? '';
+    $mottasl_template_lang_first = $settings['module_mottasl_abandon_first_temp_lang'] ?? '';
+    $mottasl_template_id_second = $settings['module_mottasl_abandon_second_temp_id'] ?? '';
+    $mottasl_template_lang_second = $settings['module_mottasl_abandon_second_temp_lang'] ?? '';
+
+    $this->load->model('extension/mottasl_oc/module/mottasl');
+    $carts = $this->model_extension_mottasl_oc_module_mottasl->getAllCarts();
+
+    $this->load->model('account/customer');
+
+    foreach ($carts as $cart) {
+      // cart date started was before 3 hours and not before 24
+      $time = time();
+      $cart_added_time = strtotime($cart['date_added']);
+      $cart_first_shot_time = strtotime('+3 hour', $cart_added_time);
+      $cart_second_shot_time = strtotime('+24 hour', $cart_added_time);
+
+      // get all carts created before 24 hours as second shot
+      $is_first = $time > $cart_first_shot_time && $time < $cart_second_shot_time;
+      // get all carts created before 3 hours and less than 24 as first shot
+      $is_second = $time > $cart_first_shot_time && $time > $cart_second_shot_time;
+
+      if (!$is_first && !$is_second) {
+        continue;
+      }
+
+      $shot = $is_first ? '1' : '2';
+
+      // check if cart is already notified about, if so ignore
+      // if not notify customer and save a record in database
+      $is_notifed = $this->model_extension_mottasl_oc_module_mottasl->checkIfNotified($cart['cart_id'], $shot);
+      if ($is_notifed) {
+        continue;
+      }
+
+      $temp_id = $is_first ? $mottasl_template_id_first : $mottasl_template_id_second;
+      $temp_lang = $is_first ? $mottasl_template_lang_first : $mottasl_template_lang_second;
+      $customer_data = $this->model_account_customer->getCustomer($cart['customer_id']);
+      $customer_phone = $customer_data['telephone'][0] == '+' ? substr($customer_data['telephone'], 1) : $customer_data['telephone'];
+      $args = [$customer_data['firstname']];
+
+      $this->__sendMessageWithZoko($mottasl_api_key, $customer_phone, $temp_id, $temp_lang, $args);
+      $this->model_extension_mottasl_oc_module_mottasl->notify($cart['cart_id'], $shot);
     }
   }
 
