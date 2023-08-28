@@ -125,15 +125,23 @@ class Mottasl extends \Opencart\System\Engine\Controller
 
   public function install()
   {
-    // registering events to show menu
+    $this->load->model('extension/mottasl_oc/module/mottasl');
+    $this->model_extension_mottasl_oc_module_mottasl->install();
+
     $this->__registerEvents();
+    $this->__registerCrons();
   }
-  /**
-   * __registerEvents
-   *
-   * @return void
-   */
-  protected function __registerEvents()
+
+  public function uninstall(): void
+  {
+    $this->load->model('extension/mottasl_oc/module/mottasl');
+    $this->model_extension_mottasl_oc_module_mottasl->uninstall();
+
+    $this->__unregisterEvents();
+    $this->__unregisterCrons();
+  }
+
+  protected function __registerEvents(): void
   {
     // events array
     $events   = array();
@@ -162,7 +170,47 @@ class Mottasl extends \Opencart\System\Engine\Controller
     }
   }
 
-  public function uninstall(): void
+  protected function __unregisterEvents(): void
   {
+    $this->load->model('setting/event');
+
+    $all_events = $this->model_setting_event->getEvents();
+
+    foreach ($all_events as $event) {
+      if ($event['code'] == "mottasl_customer_add" || $event['code'] == "mottasl_order_add") {
+        $this->model_setting_event->deleteEvent($event['event_id']);
+      }
+    }
+  }
+
+  protected function __registerCrons(): void
+  {
+    // crons array
+    $crons   = array();
+    $crons[] = array(
+      'code'        => "mottasl_abandon_cart",
+      'description' => "Notify customers about their lefted open carts",
+      'cycle'  => "hour",
+      'action'      => "extension/mottasl_oc/module/mottasl.abandonCart",
+      'status'      => 1,
+    );
+
+    // loading cron model
+    $this->load->model('setting/cron');
+    foreach ($crons as $cron) {
+      // registering crons in DB
+      $this->model_setting_cron->addCron($cron['code'], $cron['description'], $cron['cycle'], $cron['action'], $cron['status']);
+    }
+  }
+
+  protected function __unregisterCrons(): void
+  {
+    $this->load->model('setting/cron');
+
+    $crons_codes = ['mottasl_abandon_cart'];
+
+    foreach ($crons_codes as $code) {
+      $this->model_setting_cron->deleteCronByCode($code);
+    }
   }
 }
