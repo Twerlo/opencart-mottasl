@@ -140,10 +140,18 @@ class Mottasl extends \Opencart\System\Engine\Controller
     $events[] = array(
       'code'        => "mottasl_order_add",
       'trigger'     => "catalog/model/checkout/order/addHistory/before",
-      'action'      => "extension/mottasl_oc/module/mottasl.sendMessage",
-      'description' => "Customer Account Menu",
+      'action'      => "extension/mottasl_oc/module/mottasl.orderCreated",
+      'description' => "Customer created an order",
       'status'      => 1,
-      'sort_order'  => 0,
+      'sort_order'  => 1,
+    );
+    $events[] = array(
+      'code'        => "mottasl_customer_add",
+      'trigger'     => "catalog/model/account/customer/addCustomer/after",
+      'action'      => "extension/mottasl_oc/module/mottasl.customerCreated",
+      'description' => "New customer registered",
+      'status'      => 1,
+      'sort_order'  => 1,
     );
 
     // loading event model

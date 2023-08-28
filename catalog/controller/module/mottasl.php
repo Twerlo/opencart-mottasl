@@ -2,6 +2,8 @@
 
 namespace Opencart\Catalog\Controller\Extension\MottaslOc\Module;
 
+use DateTime;
+
 class Mottasl extends \Opencart\System\Engine\Controller
 {
   public function index(): void
@@ -73,6 +75,53 @@ class Mottasl extends \Opencart\System\Engine\Controller
 
     $this->__sendMessageWithZoko($mottasl_api_key, $customer_phone, $mottasl_template_id, $mottasl_template_lang, $args);
   }
+
+  // catalog/model/account/customer/addCustomer/after
+  public function customerCreated(string &$route, array &$args, mixed &$output): void
+  {
+    $customer_id = $output;
+
+    if (!$customer_id) {
+      return;
+    }
+
+    $this->load->model('account/customer');
+    $customer_data = $this->model_account_customer->getCustomer($customer_id);
+
+    $this->load->model('setting/setting');
+    $settings = $this->model_setting_setting->getSetting('module_mottasl');
+
+    $is_enabled = isset($settings['module_mottasl_api_key']) && (bool)$settings['module_mottasl_customer_created_status'];
+
+    if (!$is_enabled) {
+      $json = [];
+      $json["error"] = "WA notification is disabled for customer created";
+      $this->response->addHeader('Content-Type: application/json');
+      $this->response->setOutput(json_encode($json));
+      return;
+    }
+
+    $is_valid = isset($settings['module_mottasl_customer_created_temp_id']) && isset($settings['module_mottasl_customer_created_temp_lang']);
+
+    if (!$is_valid) {
+      $json = [];
+      $json["error"] = "Some Mottal settings are not set.";
+      $this->response->addHeader('Content-Type: application/json');
+      $this->response->setOutput(json_encode($json));
+      return;
+    }
+
+    error_log("customer created event");
+
+    $mottasl_api_key = $settings['module_mottasl_api_key'];
+    $customer_phone = $customer_data['telephone'][0] == '+' ? substr($customer_data['telephone'], 1) : $customer_data['telephone'];
+    $mottasl_template_id = $settings['module_mottasl_customer_created_temp_id'];
+    $mottasl_template_lang = $settings['module_mottasl_customer_created_temp_lang'];
+    $args = [$customer_data['firstname']];
+
+    $this->__sendMessageWithZoko($mottasl_api_key, $customer_phone, $mottasl_template_id, $mottasl_template_lang, $args);
+  }
+
       $json = [];
       $json["error"] = "Some Mottal settings are not set.";
       $this->response->addHeader('Content-Type: application/json');
