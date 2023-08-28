@@ -17,15 +17,20 @@ class Mottasl extends \Opencart\System\Engine\Controller
   }
 
   // catalog/model/checkout/order/addHistory/before
-  public function sendMessage(string &$route, array &$args): void
+  public function handleOrderEvent(string &$route, array &$args): void
   {
-    error_log($route);
-
     $order_id = $args[0];
     $order_status_id = $args[1];
 
     $this->load->model('checkout/order');
-    $order_data = $this->model_checkout_order->getOrder($order_id);
+    $order_data = $this->model_checkout_order->getOrder((int)$order_id);
+
+    if (!isset($order_data['order_id'])) {
+      return;
+    }
+
+    // check that is order created or updated event
+    $is_created_event =  $this->__isDateBeforeTenSeconds($order_data['date_added']);
 
     $this->load->model('account/customer');
     $customer_data = $this->model_account_customer->getCustomer($order_data['customer_id']);
@@ -33,7 +38,41 @@ class Mottasl extends \Opencart\System\Engine\Controller
     $this->load->model('setting/setting');
     $settings = $this->model_setting_setting->getSetting('module_mottasl');
 
-    if (!isset($settings['module_mottasl_api_key']) || !isset($settings['module_mottasl_template_id']) || !isset($settings['module_mottasl_template_lang'])) {
+    $is_enabled = isset($settings['module_mottasl_api_key']) && $is_created_event ? (bool)$settings['module_mottasl_order_created_status'] : (bool)$settings['module_mottasl_order_updated_status'];
+
+    if (!$is_enabled) {
+      $json = [];
+      $json["error"] = "Order notification is disabled for " .
+        ($is_created_event ? "order created" : "order updated") .
+        "notifcations";
+      $this->response->addHeader('Content-Type: application/json');
+      $this->response->setOutput(json_encode($json));
+      return;
+    }
+
+    $is_valid = $is_created_event ?
+      isset($settings['module_mottasl_order_created_temp_id']) && isset($settings['module_mottasl_order_created_temp_lang']) :
+      isset($settings['module_mottasl_order_updated_temp_id']) && isset($settings['module_mottasl_order_updated_temp_lang']);
+
+    if (!$is_valid) {
+      $json = [];
+      $json["error"] = "Some Mottal settings are not set.";
+      $this->response->addHeader('Content-Type: application/json');
+      $this->response->setOutput(json_encode($json));
+      return;
+    }
+
+    error_log("handle order event");
+    error_log($is_created_event ? "created" : "updated");
+
+    $mottasl_api_key = $settings['module_mottasl_api_key'];
+    $customer_phone = $customer_data['telephone'][0] == '+' ? substr($customer_data['telephone'], 1) : $customer_data['telephone'];
+    $mottasl_template_id = $is_created_event ? $settings['module_mottasl_order_created_temp_id'] : $settings['module_mottasl_order_updated_temp_id'];
+    $mottasl_template_lang = $is_created_event ? $settings['module_mottasl_order_created_temp_lang'] : $settings['module_mottasl_order_updated_temp_lang'];
+    $args = [$customer_data['firstname'], $order_data['invoice_prefix'] . $order_data['invoice_no'], $this->__getOrderStatus($order_status_id)];
+
+    $this->__sendMessageWithZoko($mottasl_api_key, $customer_phone, $mottasl_template_id, $mottasl_template_lang, $args);
+  }
       $json = [];
       $json["error"] = "Some Mottal settings are not set.";
       $this->response->addHeader('Content-Type: application/json');
@@ -43,27 +82,27 @@ class Mottasl extends \Opencart\System\Engine\Controller
     }
   }
 
-  protected function __sendMessageWithZoko(string $customer_phone, string $customer_firstname, string $order_title, string $order_status, array $settings): void
+  protected function __sendMessageWithZoko(string $api_key, string $recipient, string $template_id, string $template_language, array $template_args): void
   {
     $url = 'https://chat.zoko.io/v2/message';
+
+    $headers = array();
+    $headers[] = 'Content-Type: application/json';
+    $headers[] = 'Apikey: ' . $api_key;
+    // $headers[] = 'Apikey: 7f411978-8df5-4ea2-8a26-5fc8e6423f7f';
 
     // The data you want to send via POST
     $fields = [
       'channel' => 'whatsapp',
-      'recipient' => $customer_phone[0] == '+' ? substr($customer_phone, 1) : $customer_phone,
+      'recipient' => $recipient,
       'type' => 'template',
-      'templateId' => $settings['module_mottasl_template_id'],
-      'templateLanguage' => $settings['module_mottasl_template_lang'],
-      'templateArgs' => [$customer_firstname, $order_title, $order_status]
+      'templateId' => $template_id,
+      'templateLanguage' => $template_language,
+      'templateArgs' => $template_args
     ];
 
     //url-ify the data for the POST
     $fields_string = json_encode($fields);
-
-    $headers = array();
-    $headers[] = 'Content-Type: application/json';
-    $headers[] = 'Apikey: ' . $settings['module_mottasl_api_key'];
-    // $headers[] = 'Apikey: 7f411978-8df5-4ea2-8a26-5fc8e6423f7f';
 
     $curl = curl_init($url);
 
@@ -109,7 +148,13 @@ class Mottasl extends \Opencart\System\Engine\Controller
     return $statuses[$order_status_id];
   }
 
-  public function uninstall(): void
+  protected function __isDateBeforeTenSeconds(string $dateString): bool
   {
+    $currentDateTime = new DateTime();
+    $givenDateTime = DateTime::createFromFormat("Y-m-d H:i:s", $dateString);
+
+    $difference = $currentDateTime->getTimestamp() - $givenDateTime->getTimestamp();
+
+    return ($difference <= 10);
   }
 }
